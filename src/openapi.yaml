@@ -1,0 +1,924 @@
+openapi: 3.0.3
+info:
+  title: Investment API
+  version: 1.0.0
+  description: REST API for managing investment assets, portfolios, and alerts.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+    description: User signup and login
+  - name: Assets
+    description: Investment assets
+  - name: Portfolio
+    description: Authenticated user's portfolio entries
+  - name: Alerts
+    description: Authenticated user's price alerts
+paths:
+  /api/auth/signup:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+            example:
+              email: newuser@email.com
+              password: User123!
+      responses:
+        '201':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                user:
+                  id: 3
+                  email: newuser@email.com
+                  role: user
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example.signature
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Log in and receive a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              admin:
+                summary: Admin login
+                value:
+                  email: stkadmin@email.com
+                  password: Admin123!
+              user:
+                summary: User login
+                value:
+                  email: stkuser@email.com
+                  password: User123!
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                user:
+                  id: 2
+                  email: stkuser@email.com
+                  role: user
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example.signature
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/assets:
+    get:
+      tags:
+        - Assets
+      summary: List all assets
+      responses:
+        '200':
+          description: Assets returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Asset'
+              example:
+                - id: 1
+                  symbol: AAPL
+                  name: Apple Inc.
+                  type: stock
+                  price: '169.30000000'
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+                - id: 3
+                  symbol: BTC
+                  name: Bitcoin
+                  type: crypto
+                  price: '64500.00000000'
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Assets
+      summary: Create an asset
+      description: Admin only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetRequest'
+            example:
+              symbol: NVDA
+              name: NVIDIA Corporation
+              type: stock
+              price: 875.25
+      responses:
+        '201':
+          description: Asset created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+              example:
+                id: 5
+                symbol: NVDA
+                name: NVIDIA Corporation
+                type: stock
+                price: '875.25000000'
+                createdAt: '2026-04-29T02:00:00.000Z'
+                updatedAt: '2026-04-29T02:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/assets/{id}:
+    get:
+      tags:
+        - Assets
+      summary: Get an asset by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Asset returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+              example:
+                id: 1
+                symbol: AAPL
+                name: Apple Inc.
+                type: stock
+                price: '169.30000000'
+                createdAt: '2026-04-29T02:00:00.000Z'
+                updatedAt: '2026-04-29T02:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Assets
+      summary: Update an asset
+      description: Admin only.
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetUpdateRequest'
+            example:
+              price: 899.99
+      responses:
+        '200':
+          description: Asset updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+              example:
+                id: 5
+                symbol: NVDA
+                name: NVIDIA Corporation
+                type: stock
+                price: '899.99000000'
+                createdAt: '2026-04-29T02:00:00.000Z'
+                updatedAt: '2026-04-29T02:05:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Assets
+      summary: Delete an asset
+      description: Admin only. Delete is restricted if portfolio entries or alerts reference the asset.
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Asset deleted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/portfolio:
+    get:
+      tags:
+        - Portfolio
+      summary: List the authenticated user's portfolio entries
+      responses:
+        '200':
+          description: Portfolio entries returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Portfolio'
+              example:
+                - id: 1
+                  userId: 2
+                  assetId: 1
+                  quantity: '10.00000000'
+                  buyPrice: '150.00000000'
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+                  asset:
+                    id: 1
+                    symbol: AAPL
+                    name: Apple Inc.
+                    type: stock
+                    price: '169.30000000'
+                    createdAt: '2026-04-29T02:00:00.000Z'
+                    updatedAt: '2026-04-29T02:00:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Portfolio
+      summary: Create a portfolio entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortfolioRequest'
+            example:
+              assetId: 1
+              quantity: 12.5
+              buyPrice: 150
+      responses:
+        '201':
+          description: Portfolio entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+              example:
+                id: 4
+                userId: 2
+                assetId: 1
+                quantity: '12.50000000'
+                buyPrice: '150.00000000'
+                createdAt: '2026-04-29T02:00:00.000Z'
+                updatedAt: '2026-04-29T02:00:00.000Z'
+                asset:
+                  id: 1
+                  symbol: AAPL
+                  name: Apple Inc.
+                  type: stock
+                  price: '169.30000000'
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/portfolio/{id}:
+    get:
+      tags:
+        - Portfolio
+      summary: Get one owned portfolio entry
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Portfolio entry returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+              example:
+                id: 1
+                userId: 2
+                assetId: 1
+                quantity: '10.00000000'
+                buyPrice: '150.00000000'
+                createdAt: '2026-04-29T02:00:00.000Z'
+                updatedAt: '2026-04-29T02:00:00.000Z'
+                asset:
+                  id: 1
+                  symbol: AAPL
+                  name: Apple Inc.
+                  type: stock
+                  price: '169.30000000'
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Portfolio
+      summary: Update one owned portfolio entry
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortfolioUpdateRequest'
+            example:
+              quantity: 20
+      responses:
+        '200':
+          description: Portfolio entry updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+              example:
+                id: 1
+                userId: 2
+                assetId: 1
+                quantity: '20.00000000'
+                buyPrice: '120.00000000'
+                createdAt: '2026-04-29T02:00:00.000Z'
+                updatedAt: '2026-04-29T02:05:00.000Z'
+                asset:
+                  id: 1
+                  symbol: AAPL
+                  name: Apple Inc.
+                  type: stock
+                  price: '169.30000000'
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Portfolio
+      summary: Delete one owned portfolio entry
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Portfolio entry deleted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/alerts:
+    get:
+      tags:
+        - Alerts
+      summary: List the authenticated user's alerts
+      responses:
+        '200':
+          description: Alerts returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+              example:
+                - id: 1
+                  userId: 2
+                  assetId: 1
+                  targetPrice: '180.00000000'
+                  condition: above
+                  isActive: true
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+                  asset:
+                    id: 1
+                    symbol: AAPL
+                    name: Apple Inc.
+                    type: stock
+                    price: '169.30000000'
+                    createdAt: '2026-04-29T02:00:00.000Z'
+                    updatedAt: '2026-04-29T02:00:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Alerts
+      summary: Create an alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertRequest'
+            example:
+              assetId: 1
+              targetPrice: 180
+              condition: above
+              isActive: true
+      responses:
+        '201':
+          description: Alert created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+              example:
+                id: 4
+                userId: 2
+                assetId: 1
+                targetPrice: '180.00000000'
+                condition: above
+                isActive: true
+                createdAt: '2026-04-29T02:00:00.000Z'
+                updatedAt: '2026-04-29T02:00:00.000Z'
+                asset:
+                  id: 1
+                  symbol: AAPL
+                  name: Apple Inc.
+                  type: stock
+                  price: '169.30000000'
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/alerts/{id}:
+    get:
+      tags:
+        - Alerts
+      summary: Get one owned alert
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Alert returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+              example:
+                id: 1
+                userId: 2
+                assetId: 1
+                targetPrice: '180.00000000'
+                condition: above
+                isActive: true
+                createdAt: '2026-04-29T02:00:00.000Z'
+                updatedAt: '2026-04-29T02:00:00.000Z'
+                asset:
+                  id: 1
+                  symbol: AAPL
+                  name: Apple Inc.
+                  type: stock
+                  price: '169.30000000'
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Alerts
+      summary: Update one owned alert
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertUpdateRequest'
+            example:
+              targetPrice: 175
+              isActive: false
+      responses:
+        '200':
+          description: Alert updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+              example:
+                id: 1
+                userId: 2
+                assetId: 1
+                targetPrice: '175.00000000'
+                condition: below
+                isActive: false
+                createdAt: '2026-04-29T02:00:00.000Z'
+                updatedAt: '2026-04-29T02:05:00.000Z'
+                asset:
+                  id: 1
+                  symbol: AAPL
+                  name: Apple Inc.
+                  type: stock
+                  price: '169.30000000'
+                  createdAt: '2026-04-29T02:00:00.000Z'
+                  updatedAt: '2026-04-29T02:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Alerts
+      summary: Delete one owned alert
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Alert deleted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: Numeric record ID
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Missing, invalid, or expired JWT
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Insufficient permissions or ownership violation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Duplicate or conflicting resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    SignupRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          example: stkuser@email.com
+        role:
+          type: string
+          enum:
+            - user
+            - admin
+        createdAt:
+          type: string
+          format: date-time
+    Asset:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        symbol:
+          type: string
+          example: AAPL
+        name:
+          type: string
+          example: Apple Inc.
+        type:
+          type: string
+          enum:
+            - stock
+            - crypto
+        price:
+          type: string
+          example: '169.30000000'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AssetRequest:
+      type: object
+      required:
+        - symbol
+        - name
+        - type
+        - price
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - stock
+            - crypto
+        price:
+          type: number
+          minimum: 0
+    AssetUpdateRequest:
+      type: object
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - stock
+            - crypto
+        price:
+          type: number
+          minimum: 0
+    Portfolio:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        assetId:
+          type: integer
+        quantity:
+          type: string
+          example: '10.00000000'
+        buyPrice:
+          type: string
+          example: '150.00000000'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        asset:
+          $ref: '#/components/schemas/Asset'
+    PortfolioRequest:
+      type: object
+      required:
+        - assetId
+        - quantity
+        - buyPrice
+      properties:
+        assetId:
+          type: integer
+          minimum: 1
+        quantity:
+          type: number
+          exclusiveMinimum: true
+          minimum: 0
+        buyPrice:
+          type: number
+          minimum: 0
+    PortfolioUpdateRequest:
+      type: object
+      properties:
+        assetId:
+          type: integer
+          minimum: 1
+        quantity:
+          type: number
+          exclusiveMinimum: true
+          minimum: 0
+        buyPrice:
+          type: number
+          minimum: 0
+    Alert:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        assetId:
+          type: integer
+        targetPrice:
+          type: string
+          example: '180.00000000'
+        condition:
+          type: string
+          enum:
+            - above
+            - below
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        asset:
+          $ref: '#/components/schemas/Asset'
+    AlertRequest:
+      type: object
+      required:
+        - assetId
+        - targetPrice
+        - condition
+      properties:
+        assetId:
+          type: integer
+          minimum: 1
+        targetPrice:
+          type: number
+          minimum: 0
+        condition:
+          type: string
+          enum:
+            - above
+            - below
+        isActive:
+          type: boolean
+    AlertUpdateRequest:
+      type: object
+      properties:
+        assetId:
+          type: integer
+          minimum: 1
+        targetPrice:
+          type: number
+          minimum: 0
+        condition:
+          type: string
+          enum:
+            - above
+            - below
+        isActive:
+          type: boolean
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        details:
+          nullable: true

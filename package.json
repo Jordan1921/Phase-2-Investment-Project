@@ -1,0 +1,45 @@
+{
+  "name": "investment-api",
+  "version": "1.0.0",
+  "description": "REST API for managing investments, portfolios, and alerts.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --env-file=.env --watch server.js",
+    "start": "node server.js",
+    "seed": "node prisma/seed.js",
+    "postinstall": "prisma generate",
+    "render-build": "prisma generate && prisma migrate deploy && npm run seed"
+  },
+  "keywords": [
+    "investment",
+    "api",
+    "express",
+    "prisma",
+    "postgresql",
+    "jwt"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "prisma": {
+    "schema": "src/prisma/schema.prisma",
+    "seed": "node prisma/seed.js"
+  }
+}
