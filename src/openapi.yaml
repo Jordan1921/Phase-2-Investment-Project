@@ -3,11 +3,16 @@ info:
   title: Investment API
   version: 1.0.0
   description: REST API for managing investment assets, portfolios, and alerts.
+
 servers:
+  - url: https://investment-api-s5u4.onrender.com
+    description: Render production
   - url: http://localhost:3000
     description: Local development
+
 security:
   - bearerAuth: []
+
 tags:
   - name: Auth
     description: User signup and login
@@ -17,6 +22,7 @@ tags:
     description: Authenticated user's portfolio entries
   - name: Alerts
     description: Authenticated user's price alerts
+
 paths:
   /api/auth/signup:
     post:
@@ -53,6 +59,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
   /api/auth/login:
     post:
       tags:
@@ -85,9 +92,9 @@ paths:
                 $ref: '#/components/schemas/AuthResponse'
               example:
                 user:
-                  id: 2
-                  email: stkuser@email.com
-                  role: user
+                  id: 1
+                  email: stkadmin@email.com
+                  role: admin
                   createdAt: '2026-04-29T02:00:00.000Z'
                 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example.signature
         '400':
@@ -96,6 +103,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
   /api/assets:
     get:
       tags:
@@ -129,6 +137,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
     post:
       tags:
         - Assets
@@ -170,6 +179,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
   /api/assets/{id}:
     get:
       tags:
@@ -200,6 +210,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
     put:
       tags:
         - Assets
@@ -242,6 +253,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
     delete:
       tags:
         - Assets
@@ -262,6 +274,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
   /api/portfolio:
     get:
       tags:
@@ -296,6 +309,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
     post:
       tags:
         - Portfolio
@@ -341,6 +355,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
   /api/portfolio/{id}:
     get:
       tags:
@@ -381,6 +396,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
     put:
       tags:
         - Portfolio
@@ -428,6 +444,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
     delete:
       tags:
         - Portfolio
@@ -447,6 +464,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
   /api/alerts:
     get:
       tags:
@@ -482,6 +500,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
     post:
       tags:
         - Alerts
@@ -529,6 +548,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
   /api/alerts/{id}:
     get:
       tags:
@@ -570,6 +590,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
     put:
       tags:
         - Alerts
@@ -619,6 +640,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
     delete:
       tags:
         - Alerts
@@ -638,12 +660,14 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   parameters:
     IdParam:
       name: id
@@ -653,6 +677,7 @@ components:
         type: integer
         minimum: 1
       description: Numeric record ID
+
   responses:
     BadRequest:
       description: Invalid request
@@ -660,36 +685,60 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Validation failed
+            details: null
+
     Unauthorized:
       description: Missing, invalid, or expired JWT
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Authentication token required.
+            details: null
+
     Forbidden:
       description: Insufficient permissions or ownership violation
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: You do not have permission to perform this action.
+            details: null
+
     NotFound:
       description: Resource not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Record not found.
+            details: null
+
     Conflict:
       description: Duplicate or conflicting resource
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Asset symbol already exists.
+            details: null
+
     InternalServerError:
       description: Internal server error
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Internal server error
+            details: null
+
   schemas:
     SignupRequest:
       type: object
@@ -700,9 +749,12 @@ components:
         email:
           type: string
           format: email
+          example: newuser@email.com
         password:
           type: string
           minLength: 8
+          example: User123!
+
     LoginRequest:
       type: object
       required:
@@ -712,8 +764,11 @@ components:
         email:
           type: string
           format: email
+          example: stkadmin@email.com
         password:
           type: string
+          example: Admin123!
+
     AuthResponse:
       type: object
       properties:
@@ -721,6 +776,7 @@ components:
           $ref: '#/components/schemas/User'
         token:
           type: string
+
     User:
       type: object
       properties:
@@ -735,9 +791,11 @@ components:
           enum:
             - user
             - admin
+          example: user
         createdAt:
           type: string
           format: date-time
+
     Asset:
       type: object
       properties:
@@ -755,6 +813,7 @@ components:
           enum:
             - stock
             - crypto
+          example: stock
         price:
           type: string
           example: '169.30000000'
@@ -764,6 +823,7 @@ components:
         updatedAt:
           type: string
           format: date-time
+
     AssetRequest:
       type: object
       required:
@@ -774,40 +834,53 @@ components:
       properties:
         symbol:
           type: string
+          example: NVDA
         name:
           type: string
+          example: NVIDIA Corporation
         type:
           type: string
           enum:
             - stock
             - crypto
+          example: stock
         price:
           type: number
           minimum: 0
+          example: 875.25
+
     AssetUpdateRequest:
       type: object
       properties:
         symbol:
           type: string
+          example: NVDA
         name:
           type: string
+          example: NVIDIA Corporation
         type:
           type: string
           enum:
             - stock
             - crypto
+          example: stock
         price:
           type: number
           minimum: 0
+          example: 899.99
+
     Portfolio:
       type: object
       properties:
         id:
           type: integer
+          example: 1
         userId:
           type: integer
+          example: 2
         assetId:
           type: integer
+          example: 1
         quantity:
           type: string
           example: '10.00000000'
@@ -822,6 +895,7 @@ components:
           format: date-time
         asset:
           $ref: '#/components/schemas/Asset'
+
     PortfolioRequest:
       type: object
       required:
@@ -832,35 +906,46 @@ components:
         assetId:
           type: integer
           minimum: 1
+          example: 1
         quantity:
           type: number
           exclusiveMinimum: true
           minimum: 0
+          example: 12.5
         buyPrice:
           type: number
           minimum: 0
+          example: 150
+
     PortfolioUpdateRequest:
       type: object
       properties:
         assetId:
           type: integer
           minimum: 1
+          example: 1
         quantity:
           type: number
           exclusiveMinimum: true
           minimum: 0
+          example: 20
         buyPrice:
           type: number
           minimum: 0
+          example: 120
+
     Alert:
       type: object
       properties:
         id:
           type: integer
+          example: 1
         userId:
           type: integer
+          example: 2
         assetId:
           type: integer
+          example: 1
         targetPrice:
           type: string
           example: '180.00000000'
@@ -869,8 +954,10 @@ components:
           enum:
             - above
             - below
+          example: above
         isActive:
           type: boolean
+          example: true
         createdAt:
           type: string
           format: date-time
@@ -879,6 +966,7 @@ components:
           format: date-time
         asset:
           $ref: '#/components/schemas/Asset'
+
     AlertRequest:
       type: object
       required:
@@ -889,36 +977,47 @@ components:
         assetId:
           type: integer
           minimum: 1
+          example: 1
         targetPrice:
           type: number
           minimum: 0
+          example: 180
         condition:
           type: string
           enum:
             - above
             - below
+          example: above
         isActive:
           type: boolean
+          example: true
+
     AlertUpdateRequest:
       type: object
       properties:
         assetId:
           type: integer
           minimum: 1
+          example: 1
         targetPrice:
           type: number
           minimum: 0
+          example: 175
         condition:
           type: string
           enum:
             - above
             - below
+          example: below
         isActive:
           type: boolean
+          example: false
+
     ErrorResponse:
       type: object
       properties:
         message:
           type: string
+          example: Error message
         details:
           nullable: true
